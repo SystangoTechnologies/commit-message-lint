@@ -1,0 +1,34 @@
+{
+    "conclusion_status": {
+        "SUCCESS": "success",
+        "FAILURE": "failure",
+        "NEUTRAL": "neutral",
+        "CANCELLED": "cancelled",
+        "TIMED_OUT": "timed_out",
+        "ACTION_REQUIRED": "action_required"
+    },
+    "messages": {
+        "valid_commit_message": "Commit messages are valid",
+        "invalid_commit_message": "Commit messages are invalid",
+        "valid_pull_request_message": "Pull request title is valid",
+        "invalid_pull_request_message": "Pull request title is invalid",
+        "multiple_other_invalid_message": "other messages are invalid",
+        "single_other_invalid_message": "other message is invalid"
+    },
+    "CHECK_RUN_STATUS_COMPLETED": "completed",
+    "CHECK_RUN_NAME": "commit message validator",
+    "output_title_success": "Message validation passed!!!",
+    "output_title_fail": "Message validation failed!!!",
+    "output_summary": "",
+    "INVALID_COMMIT_LIMIT": 3,
+    "USER_AGENT": "commit-message-validator-app",
+    "CONFIG_FILENAME": "validationconfig",
+    "invalid_commit_list": {
+        "commit_id": "sha:",
+        "commit_message": "message:"
+    },
+    "REGEX": {
+        "PR_TITLE_REGEX": "PR_TITLE_REGEX=",
+        "COMMIT_MESSAGE_REGEX": "COMMIT_MESSAGE_REGEX="
+    }
+}
