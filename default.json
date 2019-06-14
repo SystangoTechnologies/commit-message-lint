@@ -13,16 +13,17 @@
         "valid_pull_request_message": "Pull request title is valid",
         "invalid_pull_request_message": "Pull request title is invalid",
         "multiple_other_invalid_message": "other messages are invalid",
-        "single_other_invalid_message": "other message is invalid"
+        "single_other_invalid_message": "other message is invalid",
+        "pr_configuration_not_set": "Pull request title format is not configured",
+        "commit_message_configuration_not_set": "Commit message format is not configured",
+        "pr_and_commit_message_configuration_not_set": "Pull request title and commit message format are not configured"
     },
     "CHECK_RUN_STATUS_COMPLETED": "completed",
     "CHECK_RUN_NAME": "commit message validator",
     "output_title_success": "Message validation passed!!!",
     "output_title_fail": "Message validation failed!!!",
-    "output_summary": "",
     "INVALID_COMMIT_LIMIT": 3,
     "USER_AGENT": "commit-message-validator-app",
-    "CONFIG_FILENAME": "validationconfig",
     "invalid_commit_list": {
         "commit_id": "sha:",
         "commit_message": "message:"

@@ -94,3 +94,6 @@ typings/
 ### Serverless ###
 # Ignore build directory
 .serverless
+
+##Apple
+.DS_store

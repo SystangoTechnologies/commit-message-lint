@@ -16,6 +16,7 @@ module.exports.getConfigData = async (app, owner, repository, fileName) => {
         let fileUrl = '';
         let fileDataString = '';
         searchFileResult = await searchFileInRepository(fileName, owner, repository);
+        app.log(searchFileResult);
         // files found
         if (searchFileResult && searchFileResult.items && Array.isArray(searchFileResult.items)) {
             for (let index = 0; index < searchFileResult.items.length; index++) {
@@ -49,6 +50,7 @@ module.exports.getRegexFromConfig = async (app, owner, repository, fileName) => 
             commitMsg: ''
         };
         let fileDataString = await exportObject.getConfigData(app, owner, repository, fileName);
+        app.log(fileDataString);
         let fileDataArray = fileDataString.split('\n');
         for (let index = 0; index < fileDataArray.length; index++) {
             const element = fileDataArray[index];
