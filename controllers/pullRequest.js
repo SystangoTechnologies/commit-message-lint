@@ -1,8 +1,8 @@
 const { checkRegex } = require('../utilities/regexUtil');
-const { getRegexFromConfig } = require('../helpers/config');
 const { createCheckSuite, createCheckRun, listCheckSuite } = require('../helpers/checks');
 const { listCommitsOfPullRequest } = require('../helpers/pullRequest');
 const defaultJson = require('../default.json');
+const mergeCommitRegex = defaultJson.REGEX.MERGE_COMMIT_REGEX;
 const conclusionStatus = defaultJson.conclusion_status;
 const messages = defaultJson.messages;
 const checkRunStatusCompleted = defaultJson.CHECK_RUN_STATUS_COMPLETED;
@@ -10,16 +10,23 @@ const checkRunName = defaultJson.CHECK_RUN_NAME;
 const outputTitleSuccess = defaultJson.output_title_success;
 const outputTitleFail = defaultJson.output_title_fail;
 
-module.exports.commitAndTitleValidator = async (app, context) => {
+/**
+ * Commit messages and PR title Validator
+ * @param {Object} app
+ * @param {Object} context
+ * @param {Object} configuration
+ */
+module.exports.commitAndTitleValidator = async (app, context, configuration) => {
     try {
+        const prTitleRegex = (configuration && configuration.PR_TITLE_REGEX) ? configuration.PR_TITLE_REGEX: '';
+        const commitTitleRegex = (configuration && configuration.COMMIT_MESSAGE_REGEX) ? configuration.COMMIT_MESSAGE_REGEX : '';
         let owner = context.payload.repository.owner.login;
         let repository = context.payload.repository.name;
         let pullRequestTitle = context.payload.pull_request.title;
         let pullNumber = context.payload.number;
-        let regexData = await getRegexFromConfig(app, owner, repository, process.env.REGEX_CONFIG_FILE_NAME);
         // find commits
         let commits = await listCommitsOfPullRequest(context, owner, repository, pullNumber);
-        let result = checkMessagesFormat(pullRequestTitle, commits.data, regexData.prTitle, regexData.commitMsg);
+        let result = checkMessagesFormat(pullRequestTitle, commits.data, prTitleRegex, commitTitleRegex);
         if (result && result.commitIds && Array.isArray(result.commitIds) && result.commitIds.length) {
             for (let index = 0; index < result.commitIds.length; index++) {
                 const commitId = result.commitIds[index];
@@ -44,8 +51,8 @@ module.exports.commitAndTitleValidator = async (app, context) => {
  * check Messages Format
  * @param {String} pullRequestTitle 
  * @param {Array} commits
- * @param {Object} prTitleRegex
- * @param {Object} commitMsgRegex
+ * @param {String} prTitleRegex
+ * @param {String} commitMsgRegex
  */
 function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgRegex) {
     try {
@@ -65,7 +72,6 @@ function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgR
          * pull Request Title check : starts
          */
         // pull request title format
-        let mergePattern = /^(Merge pull request)/;
         if (checkRegex(pullRequestTitle, prTitleRegex)) {
             pullReqTitleStatus = true;
             pullReqTitleStatusMsg = messages.valid_pull_request_message;
@@ -87,7 +93,7 @@ function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgR
                 const element = commits[index];
                 const commitMessage = element.commit.message;
                 commitIds.push(commits[index].sha);
-                if (!checkRegex(commitMessage, commitMsgRegex) && !checkRegex(commitMessage, mergePattern)) {
+                if (!checkRegex(commitMessage, commitMsgRegex) && !checkRegex(commitMessage, mergeCommitRegex)) {
                     invalidCommitsCount++;
                     commitMsgStatus = false;
                     commitMsgStatusMsg = messages.invalid_commit_message;
@@ -120,15 +126,15 @@ function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgR
                 summary: `${pullReqTitleStatusMsg}<br/>${commitMsgStatusMsg}<br/>${invalidCommits}<br/>`
             };
             let status = checkRunStatusCompleted;
-            if ((!prTitleRegex || !prTitleRegex.regexPattern) && (!commitMsgRegex || !commitMsgRegex.regexPattern)) {
+            if (!prTitleRegex && !commitMsgRegex) {
                 // pull request and commit message configration regex not set
                 output.title = `${messages.pr_and_commit_message_configuration_not_set}`;
                 output.summary = `${messages.pr_and_commit_message_configuration_not_set}<br/>`;
-            } else if (!commitMsgRegex || !commitMsgRegex.regexPattern) {
+            } else if (!commitMsgRegex) {
                 // commit message configration regex not set
                 output.title = `${messages.commit_message_configuration_not_set}`;
                 output.summary = `${pullReqTitleStatusMsg}<br/>${messages.commit_message_configuration_not_set}<br/>`;
-            } else if (!prTitleRegex || !prTitleRegex.regexPattern) {
+            } else if (!prTitleRegex) {
                 // pull request configration regex not set
                 output.title = `${messages.pr_configuration_not_set}`;
                 output.summary = `${messages.pr_configuration_not_set}<br/>${commitMsgStatusMsg}<br/>${invalidCommits}<br/>`;

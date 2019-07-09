@@ -16,20 +16,23 @@
         "single_other_invalid_message": "other message is invalid",
         "pr_configuration_not_set": "Pull request title format is not configured",
         "commit_message_configuration_not_set": "Commit message format is not configured",
-        "pr_and_commit_message_configuration_not_set": "Pull request title and commit message format are not configured"
+        "pr_and_commit_message_configuration_not_set": "Pull request title and commit message format are not configured",
+        "home_page_message": "Commit Message Lint App"
     },
     "CHECK_RUN_STATUS_COMPLETED": "completed",
-    "CHECK_RUN_NAME": "commit message validator",
+    "CHECK_RUN_NAME": "Commit Message Lint",
     "output_title_success": "Message validation passed!!!",
     "output_title_fail": "Message validation failed!!!",
     "INVALID_COMMIT_LIMIT": 3,
-    "USER_AGENT": "commit-message-validator-app",
+    "USER_AGENT": "commit-message-lint-app",
     "invalid_commit_list": {
         "commit_id": "sha:",
         "commit_message": "message:"
     },
     "REGEX": {
-        "PR_TITLE_REGEX": "PR_TITLE_REGEX=",
-        "COMMIT_MESSAGE_REGEX": "COMMIT_MESSAGE_REGEX="
+        "MERGE_COMMIT_REGEX": "/^(Merge pull request)/"
+    },
+    "events": {
+        "PULL_REQUEST_OPEN": "pull_request.opened"
     }
 }

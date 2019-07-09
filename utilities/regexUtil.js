@@ -1,13 +1,18 @@
+/**
+ * Match input string with regex
+ * @param {String} inputString
+ * @param {String} pattern
+ */
 module.exports.checkRegex = (inputString, pattern) => {
     try {
         let patt = '';
         let status = false;
-        if (pattern && pattern.regexPattern && pattern.flags) {
-            patt = new RegExp(pattern.regexPattern, pattern.flags);
+        if (pattern) {
+            let regexObj = module.exports.regexExtractor(pattern);
+            patt = new RegExp(regexObj.regexPattern, regexObj.flags);
             status = patt.test(inputString);
         } else {
-            patt = new RegExp(pattern);
-            status = patt.test(inputString);
+            status = true;
         }
         return status;
     } catch (error) {
