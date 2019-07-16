@@ -1,6 +1,6 @@
 /**
  * list Commits Of Pull Request
- * @param {Object} context The title of the pull request.
+ * @param {Object} context
  * @param {String} owner
  * @param {String} repo
  * @param {String} pullNumber
@@ -23,6 +23,28 @@ module.exports.listCommitsOfPullRequest = async (context, owner, repo, pullNumbe
         // find commits
         let commits = await context.github.pullRequests.listCommits(params);
         return commits;
+    } catch (error) {
+        return error;
+    }
+};
+
+/**
+ * Get Pull Request
+ * @param {Object} context
+ * @param {String} owner
+ * @param {String} repo
+ * @param {String} pullNumber
+ */
+module.exports.getPullRequest = async (context, owner, repo, pullNumber) => {
+    try {
+        let params = {
+            owner: owner,
+            repo: repo,
+            number: pullNumber
+        };
+        // find PR
+        let pullRequestDetails = await context.github.pullRequests.get(params);
+        return pullRequestDetails;
     } catch (error) {
         return error;
     }

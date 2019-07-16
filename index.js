@@ -1,31 +1,79 @@
-const { commitAndTitleValidator } = require('./controllers/pullRequest');
-const { messages, events } = require('./default.json');
+/**
+ * Packages
+ */
 const express = require('express');
 const expressApp = express();
 const path = require('path');
-const publicDirectory = `${__dirname}/public`;
 
 /**
- * This is the main entrypoint to your Probot app
+ * Controllers
+ */
+const { commitAndTitleValidator } = require('./controllers/pullRequest');
+const { listForSuite } = require('./controllers/checks');
+
+/**
+ * Constants
+ */
+const { configFileName, messages, events } = require('./constants.js');
+const publicDirectory = path.join(`${__dirname}`, 'public');
+
+/**
+ * This is the main entrypoint to Probot app
  * @param {import('probot').Application} app
  */
-const ConfigFilename = process.env.REGEX_CONFIG_FILE_NAME;
-
 module.exports = async app => {
   /**
    * Created pull request event listener
    */
   app.on(events.PULL_REQUEST_OPEN, async (context) => {
-    const configuration = await context.config(ConfigFilename);
-    await commitAndTitleValidator(app, context, configuration);
+    try {
+      const configuration = await context.config(configFileName);
+      await commitAndTitleValidator(app, context, configuration, false); 
+    } catch (error) {
+      app.log(error);
+    }
+  });
+  /**
+   * Check re-run event listener
+   */
+  app.on(events.CHECK_RUN_REREQUESTED, async (context) => {
+    try {
+      const configuration = await context.config(configFileName);
+      await commitAndTitleValidator(app, context, configuration, true); 
+    } catch (error) {
+      app.log(error);
+    }
+  });
+  /**
+   * Re-run all checks (Check Suite Re-requested) event listener
+   */
+  app.on(events.CHECK_SUITE_REREQUESTED, async (context) => {
+    try {
+      const listOfCheckRuns = await listForSuite(app, context);
+      context.payload.check_run = {
+        id: listOfCheckRuns.data.check_runs[0].id
+      };
+      const configuration = await context.config(configFileName);
+      await commitAndTitleValidator(app, context, configuration, true); 
+    } catch (error) {
+      app.log(error);
+    }
   });
 
+  /**
+   * Web APIs
+   */
+  /**
+   * Home page API 
+   */
   expressApp.get('/', (req, res) => {
     res.send(messages.home_page_message);
   });
-
+  /**
+   * Privacy page API
+   */
   expressApp.get('/privacy', (req, res) => {
-    res.sendFile(path.join(`${publicDirectory}/privacy.html`));
+    res.sendFile(path.join(`${publicDirectory}`, 'privacy.html'));
   });
 
   app.router.use('/', expressApp);

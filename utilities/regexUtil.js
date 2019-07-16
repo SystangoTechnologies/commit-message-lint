@@ -21,8 +21,8 @@ module.exports.checkRegex = (inputString, pattern) => {
 };
 
 /**
- * regex Extractor
- * @param {String} rawRegexString 
+ * Extracts regex pattern and flags from input string
+ * @param {String} rawRegexString contains regex
  */
 module.exports.regexExtractor = (rawRegexString) => {
     try {
