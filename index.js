@@ -28,7 +28,7 @@ module.exports = async app => {
   app.on(events.PULL_REQUEST_OPEN, async (context) => {
     try {
       const configuration = await context.config(configFileName);
-      await commitAndTitleValidator(app, context, configuration, false); 
+      await commitAndTitleValidator(app, context, configuration, false, true);
     } catch (error) {
       app.log(error);
     }
@@ -39,7 +39,7 @@ module.exports = async app => {
   app.on(events.CHECK_RUN_REREQUESTED, async (context) => {
     try {
       const configuration = await context.config(configFileName);
-      await commitAndTitleValidator(app, context, configuration, true); 
+      await commitAndTitleValidator(app, context, configuration, true, false);
     } catch (error) {
       app.log(error);
     }
@@ -54,7 +54,18 @@ module.exports = async app => {
         id: listOfCheckRuns.data.check_runs[0].id
       };
       const configuration = await context.config(configFileName);
-      await commitAndTitleValidator(app, context, configuration, true); 
+      await commitAndTitleValidator(app, context, configuration, true, false);
+    } catch (error) {
+      app.log(error);
+    }
+  });
+  /**
+   * Run all checks (Check Suite Requested) event listener
+   */
+  app.on(events.CHECK_SUITE_REQUESTED, async (context) => {
+    try {
+      const configuration = await context.config(configFileName);
+      await commitAndTitleValidator(app, context, configuration, false, true);
     } catch (error) {
       app.log(error);
     }

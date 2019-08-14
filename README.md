@@ -1,3 +1,4 @@
+
 # Commit Message Lint
 Github app to validate commit message and pull request title on a pull request
 
@@ -24,6 +25,21 @@ COMMIT_MESSAGE_REGEX: <Commit Message Regex>
 
 ## Usage
 Go to the `checks` section on your PR to see the result of the check run performed by the app. It will show you the result as well as the commit messages which failed.
+
+## Local setup
+Step 1. Clone the application.
+Step 2. Run `npm install`
+Step 3. Create `.env` file in the root directory and set the following environment variables in `.env` file :
+```
+    APP_ID - Github app id (get from app settings page)
+    WEBHOOK_PROXY_URL - URL of the hosted application, use ngrok for local
+    WEBHOOK_SECRET - webhook secret for security, same as the one set in github app settings
+    PRIVATE_KEY - Get from github app settings page
+    LOG_LEVEL - Log level
+    REGEX_CONFIG_FILE_NAME - config file which contains repo config, keep it as config.yml
+    GITHUB_BASE_PATH - Github API path, keep it as https://api.github.com
+```
+Step 4. Run `npm start` to start the application
 
 ## Contributors
 [Anshul Soni](https://www.linkedin.com/in/anshul-soni-3903a2101/)

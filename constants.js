@@ -38,6 +38,7 @@ module.exports = {
   events: {
     PULL_REQUEST_OPEN: 'pull_request.opened',
     CHECK_RUN_REREQUESTED: 'check_run.rerequested',
-    CHECK_SUITE_REREQUESTED: 'check_suite.rerequested'
+    CHECK_SUITE_REREQUESTED: 'check_suite.rerequested',
+    CHECK_SUITE_REQUESTED: 'check_suite.requested'
   }
 };

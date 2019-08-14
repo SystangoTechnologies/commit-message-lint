@@ -21,28 +21,38 @@ const outputTitleFail = constants.output_title_fail;
 
 /**
  * Commit messages and PR title Validator
- * @param {Object} app
- * @param {Object} context
- * @param {Object} configuration
- * @param {Boolean} updateCheckRunFlag
+ * @param {Object} app Probot app object
+ * @param {Object} context Github event context
+ * @param {Object} configuration Contains data (i.e regex for PR and Commits) from config.yml file
+ * @param {Boolean} updateCheckRunFlag Update existing check run
+ *  @param {Boolean} createCheckRunFlag Create existing check run
  */
-module.exports.commitAndTitleValidator = async (app, context, configuration, updateCheckRunFlag) => {
+module.exports.commitAndTitleValidator = async (app, context, configuration, updateCheckRunFlag, createCheckRunFlag) => {
     try {
         let { prTitleRegex, commitTitleRegex } = regexExtractor(configuration);
         let { owner, repository, pullRequestTitle, pullNumber } = prDetailsExtractor(context);
-        // find commits
+        /**
+         * Find all commits for a pull request
+         */
         let commits = await listCommitsOfPullRequest(context, owner, repository, pullNumber);
-        if(updateCheckRunFlag) {
+        /**
+         * If `PR title` is not present in `context`
+         */
+        if (!pullRequestTitle) {
             /**
-             * In case of check re-run and check suite re-run or Re-run all checks, get pull request data
+             * In case of new check suite requested, check re-run and check suite re-run or Re-run all checks, get
+             * pull request data
              */
             const pullRequestDetails = await getPullRequest(context, owner, repository, pullNumber);
-            if(pullRequestDetails && pullRequestDetails.data && pullRequestDetails.data.title) {
+            /**
+             * Get PR title
+             */
+            if (pullRequestDetails && pullRequestDetails.data && pullRequestDetails.data.title) {
                 pullRequestTitle = pullRequestDetails.data.title;
             }
         }
         let result = checkMessagesFormat(pullRequestTitle, commits.data, prTitleRegex, commitTitleRegex);
-        await createOrUpdateCheckRun(context, owner, repository, result, updateCheckRunFlag);
+        await createOrUpdateCheckRun(context, owner, repository, result, updateCheckRunFlag, createCheckRunFlag);
     } catch (error) {
         app.log(error);
     }
@@ -70,7 +80,9 @@ function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgR
         };
         checkPrTitle(pullRequestTitle, prTitleRegex, flags);
         if (commits && Array.isArray(commits) && commits.length) {
-            // check all commit messages
+            /**
+             * Check all commit messages
+             */
             checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRegex, flags);
             result = concludeCheckRunParams(prTitleRegex, commitMsgRegex, commitIds, flags);
         }
@@ -87,12 +99,16 @@ function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgR
  * @param {Object} flags 
  */
 function checkPrTitle(pullRequestTitle, prTitleRegex, flags) {
-    // pull request title format
+    /**
+     * Check pull request title format
+     */
     if (checkRegex(pullRequestTitle, prTitleRegex)) {
         flags.pullReqTitleStatus = true;
         flags.pullReqTitleStatusMsg = messages.valid_pull_request_message;
     } else {
-        // invalid pull Request title
+        /**
+         * Invalid pull Request title
+         */
         flags.pullReqTitleStatus = false;
         flags.pullReqTitleStatusMsg = messages.invalid_pull_request_message;
     }
@@ -107,7 +123,9 @@ function checkPrTitle(pullRequestTitle, prTitleRegex, flags) {
  * @param {Object} flags
  */
 function checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRegex, flags) {
-    // check all commit messages
+    /**
+     * Check all commit messages
+     */
     for (let index = 0; index < commits.length; index++) {
         const element = commits[index];
         const commitMessage = element.commit.message;
@@ -157,19 +175,27 @@ function concludeCheckRunParams(prTitleRegex, commitMsgRegex, commitIds, flags) 
     };
     let status = checkRunStatusCompleted;
     if (!prTitleRegex && !commitMsgRegex) {
-        // pull request and commit message configration regex not set
+        /**
+         * Pull request and commit message configration regex not set
+         */
         output.title = `${messages.pr_and_commit_message_configuration_not_set}`;
         output.summary = `${messages.pr_and_commit_message_configuration_not_set}<br/>`;
     } else if (!commitMsgRegex) {
-        // commit message configration regex not set
+        /**
+         * Commit message configration regex not set
+         */
         output.title = `${messages.commit_message_configuration_not_set}`;
         output.summary = `${flags.pullReqTitleStatusMsg}<br/>${messages.commit_message_configuration_not_set}<br/>`;
     } else if (!prTitleRegex) {
-        // pull request configration regex not set
+        /**
+         * Pull request configration regex not set
+         */
         output.title = `${messages.pr_configuration_not_set}`;
         output.summary = `${messages.pr_configuration_not_set}<br/>${flags.commitMsgStatusMsg}<br/>${flags.invalidCommits}<br/>`;
     }
-    // set invalid commit messages and count
+    /**
+     * Set invalid commit messages and count
+     */
     if (flags.invalidCommitsCount && flags.invalidCommitsCount >= constants.INVALID_COMMIT_LIMIT) {
         output.summary += `${flags.invalidCommitsCount} ${flags.otherInvalidCommitMessages}`;
     }
@@ -194,29 +220,29 @@ function prDetailsExtractor(context) {
         pullRequestTitle: '',
         pullNumber: 0
     };
-    if(context.payload) {
+    if (context.payload) {
         /**
          * Extract repository details
          */
-        if(context.payload.repository) {
-            if(context.payload.repository.owner && context.payload.repository.owner.login) {
+        if (context.payload.repository) {
+            if (context.payload.repository.owner && context.payload.repository.owner.login) {
                 result.owner = context.payload.repository.owner.login;
             }
-            if(context.payload.repository.name) {
+            if (context.payload.repository.name) {
                 result.repository = context.payload.repository.name;
             }
         }
         /**
-         * Extract pr title and pull number
+         * Extract PR title and pull number
          */
-        if(context.payload.pull_request && context.payload.pull_request.title) {
+        if (context.payload.pull_request && context.payload.pull_request.title) {
             result.pullRequestTitle = context.payload.pull_request.title;
         }
-        if(context.payload.number) {
+        if (context.payload.number) {
             result.pullNumber = context.payload.number;
-        } else if(context.payload.check_run && context.payload.check_run.check_suite && context.payload.check_run.check_suite.pull_requests && context.payload.check_run.check_suite.pull_requests.length && context.payload.check_run.check_suite.pull_requests[0].number) {
+        } else if (context.payload.check_run && context.payload.check_run.check_suite && context.payload.check_run.check_suite.pull_requests && context.payload.check_run.check_suite.pull_requests.length && context.payload.check_run.check_suite.pull_requests[0].number) {
             result.pullNumber = context.payload.check_run.check_suite.pull_requests[0].number;
-        } else if(context.payload.check_suite && context.payload.check_suite.pull_requests.length && context.payload.check_suite.pull_requests[0].number) {
+        } else if (context.payload.check_suite && context.payload.check_suite.pull_requests.length && context.payload.check_suite.pull_requests[0].number) {
             result.pullNumber = context.payload.check_suite.pull_requests[0].number;
         }
     }
@@ -232,7 +258,7 @@ function regexExtractor(configuration) {
         prTitleRegex: '',
         commitTitleRegex: ''
     };
-    result.prTitleRegex = (configuration && configuration.PR_TITLE_REGEX) ? configuration.PR_TITLE_REGEX: '';
+    result.prTitleRegex = (configuration && configuration.PR_TITLE_REGEX) ? configuration.PR_TITLE_REGEX : '';
     result.commitTitleRegex = (configuration && configuration.COMMIT_MESSAGE_REGEX) ? configuration.COMMIT_MESSAGE_REGEX : '';
     return result;
 }
@@ -243,32 +269,37 @@ function regexExtractor(configuration) {
  * @param {String} owner 
  * @param {String} repository 
  * @param {Object} result 
- * @param {boolean} updateCheckRunFlag 
+ * @param {boolean} updateCheckRunFlag
+ *  @param {boolean} createCheckRunFlag
  */
-async function createOrUpdateCheckRun(context, owner, repository, result, updateCheckRunFlag) {
+async function createOrUpdateCheckRun(context, owner, repository, result, updateCheckRunFlag, createCheckRunFlag) {
     if (result && result.commitIds && Array.isArray(result.commitIds) && result.commitIds.length) {
         for (let index = 0; index < result.commitIds.length; index++) {
             const commitId = result.commitIds[index];
-            if(updateCheckRunFlag) {
+            if (updateCheckRunFlag) {
                 /**
                  * Update existing check run
                  */
                 const checkRunId = context.payload.check_run.id;
                 await updateCheckRun(context, owner, repository, commitId, result.status, result.conclusion, result.output, checkRunId);
-            } else {
+            } else if (createCheckRunFlag) {
                 /**
                  * Create check new run
                  */
                 /**
                  *  check if checkSuite exists or not for the commit
                  */
-               let checkSuiteList = await listCheckSuite(context, owner, repository, commitId);
-               if (!checkSuiteList || (checkSuiteList && checkSuiteList.data && checkSuiteList.data.total_count && checkSuiteList.data.total_count === 0)) {
-                   // create check suite for a particular commit
-                   await createCheckSuite(context, owner, repository, commitId);
-               }
-               // create check run
-               await createCheckRun(context, owner, repository, commitId, result.status, result.checkRunName, result.conclusion, result.output);
+                let checkSuiteList = await listCheckSuite(context, owner, repository, commitId);
+                if (!checkSuiteList || (checkSuiteList && checkSuiteList.data && checkSuiteList.data.total_count && checkSuiteList.data.total_count === 0)) {
+                    /**
+                     * create check suite for a particular commit
+                     */
+                    await createCheckSuite(context, owner, repository, commitId);
+                }
+                /**
+                 * create check run
+                 */
+                await createCheckRun(context, owner, repository, commitId, result.status, result.checkRunName, result.conclusion, result.output);
             }
         }
     }
