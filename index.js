@@ -4,11 +4,13 @@
 const express = require('express');
 const expressApp = express();
 const path = require('path');
+const bodyParser = require('body-parser');
 
 /**
  * Controllers
  */
 const { commitAndTitleValidator } = require('./controllers/pullRequest');
+const { marketplaceEventHandlers, getAccessToken } = require('./controllers/marketplace');
 const { listForSuite } = require('./controllers/checks');
 
 /**
@@ -71,6 +73,19 @@ module.exports = async app => {
     }
   });
 
+  app.on(events.CHECK_SUITE, async context => {
+    try {
+      const configuration = await context.config(configFileName);
+      await commitAndTitleValidator(app, context, configuration, false, true);
+    } catch (error) {
+      app.log(error);
+    }
+  });
+
+  /**
+   * Middlewares
+   */
+  expressApp.use(bodyParser.json());
   /**
    * Web APIs
    */
@@ -86,6 +101,17 @@ module.exports = async app => {
   expressApp.get('/privacy', (req, res) => {
     res.sendFile(path.join(`${publicDirectory}`, 'privacy.html'));
   });
+  /**
+   * Marketplace API
+   * This API gets hit by github on any marketplace event
+   */
+  expressApp.post('/marketplace', marketplaceEventHandlers);
+
+  /**
+   * This API gets hit when redirected by `POST: /marketplace` API
+   * This API exchanges code with github for accessToken
+   */
+  expressApp.get('/auth', getAccessToken);
 
   app.router.use('/', expressApp);
 };

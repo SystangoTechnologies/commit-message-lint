@@ -12,7 +12,7 @@ module.exports.listCommitsOfPullRequest = async (context, owner, repo, pullNumbe
         let params = {
             owner: owner,
             repo: repo,
-            number: pullNumber
+            pull_number: pullNumber
         };
         if (perPage) {
             params.per_page = perPage;
@@ -40,7 +40,7 @@ module.exports.getPullRequest = async (context, owner, repo, pullNumber) => {
         let params = {
             owner: owner,
             repo: repo,
-            number: pullNumber
+            pull_number: pullNumber
         };
         // find PR
         let pullRequestDetails = await context.github.pullRequests.get(params);

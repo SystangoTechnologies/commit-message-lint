@@ -11,6 +11,7 @@ const { listCommitsOfPullRequest, getPullRequest } = require('../helpers/pullReq
  * Constants
  */
 const constants = require('../constants.js');
+const rp = require('request-promise');
 const mergeCommitRegex = constants.REGEX.MERGE_COMMIT_REGEX;
 const conclusionStatus = constants.conclusion_status;
 const messages = constants.messages;
@@ -29,8 +30,28 @@ const outputTitleFail = constants.output_title_fail;
  */
 module.exports.commitAndTitleValidator = async (app, context, configuration, updateCheckRunFlag, createCheckRunFlag) => {
     try {
-        let { prTitleRegex, commitTitleRegex } = regexExtractor(configuration);
+        console.log('config received using single file:', configuration)
         let { owner, repository, pullRequestTitle, pullNumber } = prDetailsExtractor(context);
+
+        if (!configuration || !configuration.PR_TITLE_REGEX || !configuration.COMMIT_MESSAGE_REGEX) {
+            let path = process.env.REGEX_CONFIG_FILE_PATH + '/' + process.env.REGEX_CONFIG_FILE_NAME;
+            let configFile = await context.github.repos.getContents({owner:owner, repo: repository, path: path});
+            let rpOptions = {
+                uri: configFile.data.download_url,
+                method: 'GET',
+            };
+            let fileData = await rp (rpOptions);
+            let configArr = fileData.split("\n");
+            configuration = {};
+            let prTitleKey = configArr[0].substring(0, configArr[0].indexOf(':'));
+            let prTitleValue = configArr[0].substring(configArr[0].indexOf(':') +1, configArr[0].length);
+            configuration[prTitleKey.trim()] = prTitleValue.trim();
+            let commitMsgKey = configArr[1].substring(0, configArr[1].indexOf(':'));
+            let commitMsgValue = configArr[1].substring(configArr[1].indexOf(':') +1, configArr[1].length);
+            configuration[commitMsgKey.trim()] = commitMsgValue.trim();
+            console.log('config updated from new method:', configuration)
+        }
+        let { prTitleRegex, commitTitleRegex } = regexExtractor(configuration);
         /**
          * Find all commits for a pull request
          */
@@ -54,6 +75,7 @@ module.exports.commitAndTitleValidator = async (app, context, configuration, upd
         let result = checkMessagesFormat(pullRequestTitle, commits.data, prTitleRegex, commitTitleRegex);
         await createOrUpdateCheckRun(context, owner, repository, result, updateCheckRunFlag, createCheckRunFlag);
     } catch (error) {
+        console.log('------error------', error);
         app.log(error);
     }
 };

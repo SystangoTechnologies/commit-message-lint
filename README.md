@@ -1,4 +1,3 @@
-
 # Commit Message Lint
 Github app to validate commit message and pull request title on a pull request
 
@@ -39,9 +38,13 @@ Step 3. Create `.env` file in the root directory and set the following environme
     REGEX_CONFIG_FILE_NAME - config file which contains repo config, keep it as config.yml
     GITHUB_BASE_PATH - Github API path, keep it as https://api.github.com
 ```
+Note : Take values of APP_ID, WEBHOOK_PROXY_URL, WEBHOOK_SECRET, PRIVATE_KEY from https://github.com/settings/apps/commit-message-lint
+
 Step 4. Run `npm start` to start the application
 
 ## Contributors
 [Anshul Soni](https://www.linkedin.com/in/anshul-soni-3903a2101/)
 
 [Sumit Singhal](https://www.linkedin.com/in/s-singhal)
+
+[Vikas Patidar](https://www.linkedin.com/in/vikas-patidar-0106/)

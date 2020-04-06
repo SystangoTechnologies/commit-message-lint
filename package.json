@@ -1,6 +1,6 @@
 {
   "name": "commit-message-lint-app",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "An app for validating commit messages and pull requests title",
   "author": "Anshul Soni <asoni@isystango.com>",
   "license": "ISC",
@@ -19,9 +19,11 @@
     "lint": "standard --fix"
   },
   "dependencies": {
-    "handlebars": "^4.1.2",
+    "handlebars": "^4.7.2",
     "lodash": "^4.17.14",
-    "probot": "^7.2.0",
+    "moment": "^2.24.0",
+    "pg": "^7.12.1",
+    "probot": "^9.5.0",
     "request": "^2.88.0",
     "request-promise": "^4.2.4"
   },
