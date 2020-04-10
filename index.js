@@ -32,6 +32,7 @@ module.exports = async app => {
       const configuration = await context.config(configFileName);
       await commitAndTitleValidator(app, context, configuration, false, true);
     } catch (error) {
+      console.log('Error while performing operation in Event PULL_REQUEST_OPEN', error);
       app.log(error);
     }
   });
@@ -43,6 +44,7 @@ module.exports = async app => {
       const configuration = await context.config(configFileName);
       await commitAndTitleValidator(app, context, configuration, true, false);
     } catch (error) {
+      console.log('Error while performing operation in Event CHECK_RUN_REREQUESTED', error);
       app.log(error);
     }
   });
@@ -58,6 +60,7 @@ module.exports = async app => {
       const configuration = await context.config(configFileName);
       await commitAndTitleValidator(app, context, configuration, true, false);
     } catch (error) {
+      console.log('Error while performing operation in Event CHECK_SUITE_REREQUESTED', error);
       app.log(error);
     }
   });
@@ -69,6 +72,7 @@ module.exports = async app => {
       const configuration = await context.config(configFileName);
       await commitAndTitleValidator(app, context, configuration, false, true);
     } catch (error) {
+      console.log('Error while performing operation in Event CHECK_SUITE_REQUESTED', error);
       app.log(error);
     }
   });
@@ -78,6 +82,7 @@ module.exports = async app => {
       const configuration = await context.config(configFileName);
       await commitAndTitleValidator(app, context, configuration, false, true);
     } catch (error) {
+      console.log('Error while performing operation in Event CHECK_SUITE', error);
       app.log(error);
     }
   });

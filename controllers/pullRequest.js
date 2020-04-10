@@ -17,8 +17,8 @@ const conclusionStatus = constants.conclusion_status;
 const messages = constants.messages;
 const checkRunStatusCompleted = constants.CHECK_RUN_STATUS_COMPLETED;
 const checkRunName = constants.CHECK_RUN_NAME;
-const outputTitleSuccess = constants.output_title_success;
-const outputTitleFail = constants.output_title_fail;
+let outputTitleSuccess = constants.output_title_success;
+let outputTitleFail = constants.output_title_fail;
 
 /**
  * Commit messages and PR title Validator
@@ -72,7 +72,7 @@ module.exports.commitAndTitleValidator = async (app, context, configuration, upd
                 pullRequestTitle = pullRequestDetails.data.title;
             }
         }
-        let result = checkMessagesFormat(pullRequestTitle, commits.data, prTitleRegex, commitTitleRegex);
+        let result = checkMessagesFormat(pullRequestTitle, commits.data, prTitleRegex, commitTitleRegex, configuration);
         await createOrUpdateCheckRun(context, owner, repository, result, updateCheckRunFlag, createCheckRunFlag);
     } catch (error) {
         console.log('------error------', error);
@@ -87,26 +87,27 @@ module.exports.commitAndTitleValidator = async (app, context, configuration, upd
  * @param {String} prTitleRegex
  * @param {String} commitMsgRegex
  */
-function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgRegex) {
+function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgRegex, configuration) {
     try {
+        const commitMsgStatusMsg = configuration.VALID_COMMIT_MESSAGE || messages.valid_commit_message;
         let result = {};
         let commitIds = [];
         let flags = {
             pullReqTitleStatus: false,
             pullReqTitleStatusMsg: '',
             commitMsgStatus: true,
-            commitMsgStatusMsg: messages.valid_commit_message,
+            commitMsgStatusMsg,
             invalidCommits: '',
             invalidCommitsCount: 0,
             otherInvalidCommitMessages: ''
         };
-        checkPrTitle(pullRequestTitle, prTitleRegex, flags);
+        checkPrTitle(pullRequestTitle, prTitleRegex, flags, configuration);
         if (commits && Array.isArray(commits) && commits.length) {
             /**
              * Check all commit messages
              */
-            checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRegex, flags);
-            result = concludeCheckRunParams(prTitleRegex, commitMsgRegex, commitIds, flags);
+            checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRegex, flags, configuration);
+            result = concludeCheckRunParams(prTitleRegex, commitMsgRegex, commitIds, flags, configuration);
         }
         return result;
     } catch (error) {
@@ -120,19 +121,22 @@ function checkMessagesFormat(pullRequestTitle, commits, prTitleRegex, commitMsgR
  * @param {String} prTitleRegex 
  * @param {Object} flags 
  */
-function checkPrTitle(pullRequestTitle, prTitleRegex, flags) {
+function checkPrTitle(pullRequestTitle, prTitleRegex, flags, configuration) {
     /**
      * Check pull request title format
      */
+    const validPullRequestMessage = configuration.VALID_PULL_REQUEST_MESSAGE || messages.valid_pull_request_message;
+    const invalidPullRequestMessage = configuration.INVALID_PULL_REQUEST_MESSAGE || messages.invalid_pull_request_message;
+
     if (checkRegex(pullRequestTitle, prTitleRegex)) {
         flags.pullReqTitleStatus = true;
-        flags.pullReqTitleStatusMsg = messages.valid_pull_request_message;
+        flags.pullReqTitleStatusMsg = validPullRequestMessage;
     } else {
         /**
          * Invalid pull Request title
          */
         flags.pullReqTitleStatus = false;
-        flags.pullReqTitleStatusMsg = messages.invalid_pull_request_message;
+        flags.pullReqTitleStatusMsg = invalidPullRequestMessage;
     }
 }
 
@@ -144,10 +148,14 @@ function checkPrTitle(pullRequestTitle, prTitleRegex, flags) {
  * @param {String} mergeCommitRegex
  * @param {Object} flags
  */
-function checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRegex, flags) {
+function checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRegex, flags, configuration) {
     /**
      * Check all commit messages
      */
+    const commitMsgStatusMsg = configuration.INVALID_COMMIT_MESSAGE || messages.invalid_commit_message;
+    const singleOtherInvalidMessage = configuration.SINGLE_OTHER_INVALID_MESSAGE || messages.single_other_invalid_message;
+    const multipleOtherInvalidMessage = configuration.MULTIPLE_OTHER_INVALID_MESSAGE || messages.multiple_other_invalid_message;
+
     for (let index = 0; index < commits.length; index++) {
         const element = commits[index];
         const commitMessage = element.commit.message;
@@ -155,13 +163,13 @@ function checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRege
         if (!checkRegex(commitMessage, commitMsgRegex) && !checkRegex(commitMessage, mergeCommitRegex)) {
             flags.invalidCommitsCount++;
             flags.commitMsgStatus = false;
-            flags.commitMsgStatusMsg = messages.invalid_commit_message;
+            flags.commitMsgStatusMsg = commitMsgStatusMsg;
             if (flags.invalidCommitsCount <= constants.INVALID_COMMIT_LIMIT) {
                 flags.invalidCommits += `${constants.invalid_commit_list.commit_id} ${commits[index].sha} | ${constants.invalid_commit_list.commit_message} ${commitMessage} <br/>`;
                 if (flags.invalidCommitsCount === 1) {
-                    flags.otherInvalidCommitMessages = messages.single_other_invalid_message;
+                    flags.otherInvalidCommitMessages = singleOtherInvalidMessage;
                 } else {
-                    flags.otherInvalidCommitMessages = messages.multiple_other_invalid_message;
+                    flags.otherInvalidCommitMessages = multipleOtherInvalidMessage;
                 }
             }
         }
@@ -175,9 +183,13 @@ function checkCommitMessages(commits, commitIds, commitMsgRegex, mergeCommitRege
  * @param {Array} commitIds 
  * @param {Object} flags 
  */
-function concludeCheckRunParams(prTitleRegex, commitMsgRegex, commitIds, flags) {
+function concludeCheckRunParams(prTitleRegex, commitMsgRegex, commitIds, flags, configuration) {
     let checkRunParams = {};
     let output = {};
+    outputTitleFail = configuration.OUTPUT_TITLE_FAIL || outputTitleFail;
+    outputTitleSuccess = configuration.OUTPUT_TITLE_SUCCESS || outputTitleFail;
+    console.log('outputTitleFail', outputTitleFail)
+    console.log('outputTitleSuccess', outputTitleSuccess)
     let outputTitle = outputTitleFail;
     let conclusion = conclusionStatus.FAILURE;
     /**
