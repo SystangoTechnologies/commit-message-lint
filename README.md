@@ -50,6 +50,14 @@ Note : Take values of APP_ID, WEBHOOK_PROXY_URL, WEBHOOK_SECRET, PRIVATE_KEY fro
 
 Step 4. Run `npm start` to start the application
 
+## Resources
+[Purchase Flow](https://developer.github.com/marketplace/integrating-with-the-github-marketplace-api/handling-new-purchases-and-free-trials/)
+
+[Identifying and authorizing users for GitHub Apps](https://developer.github.com/apps/building-github-apps/identifying-and-authorizing-users-for-github-apps/)
+
+[Integrating with the GitHub Marketplace API](https://developer.github.com/marketplace/integrating-with-the-github-marketplace-api/)
+
+
 ## Contributors
 [Anshul Soni](https://www.linkedin.com/in/anshul-soni-3903a2101/)
 

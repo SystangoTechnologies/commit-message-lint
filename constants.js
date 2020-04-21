@@ -43,5 +43,6 @@ module.exports = {
     MARKETPLACE_PURCHASE: 'marketplace_purchase',
     CHECK_SUITE: 'check_suite'
   },
-  OAUTH_ENDPOINT: 'https://github.com/login/oauth'
+  OAUTH_ENDPOINT: 'https://github.com/login/oauth',
+  INSTALLATION_PATH: 'https://github.com/settings/installations'
 };
