@@ -5,18 +5,31 @@ const express = require('express');
 const expressApp = express();
 const path = require('path');
 const bodyParser = require('body-parser');
-
+const {
+  verifyWebhookData
+} = require('./middleware/verifyWebhooks');
 /**
  * Controllers
  */
-const { commitAndTitleValidator } = require('./controllers/pullRequest');
-const { marketplaceEventHandlers, getAccessToken } = require('./controllers/marketplace');
-const { listForSuite } = require('./controllers/checks');
+const {
+  commitAndTitleValidator
+} = require('./controllers/pullRequest');
+const {
+  marketplaceEventHandlers,
+  getAccessToken
+} = require('./controllers/marketplace');
+const {
+  listForSuite
+} = require('./controllers/checks');
 
 /**
  * Constants
  */
-const { configFileName, messages, events } = require('./constants.js');
+const {
+  configFileName,
+  messages,
+  events
+} = require('./constants.js');
 const publicDirectory = path.join(`${__dirname}`, 'public');
 
 /**
@@ -110,7 +123,7 @@ module.exports = async app => {
    * Marketplace API
    * This API gets hit by github on any marketplace event
    */
-  expressApp.post('/marketplace', marketplaceEventHandlers);
+  expressApp.post('/marketplace', verifyWebhookData, marketplaceEventHandlers);
 
   /**
    * This API gets hit when redirected by `POST: /marketplace` API
