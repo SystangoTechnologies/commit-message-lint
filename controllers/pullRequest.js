@@ -172,7 +172,7 @@ function concludeCheckRunParams(prTitleRegex, commitMsgRegex, commitIds, flags, 
     let checkRunParams = {};
     let output = {};
     outputTitleFail = configuration.OUTPUT_TITLE_FAIL || outputTitleFail;
-    outputTitleSuccess = configuration.OUTPUT_TITLE_SUCCESS || outputTitleFail;
+    outputTitleSuccess = configuration.OUTPUT_TITLE_SUCCESS || outputTitleSuccess;
     console.log('outputTitleFail', outputTitleFail)
     console.log('outputTitleSuccess', outputTitleSuccess)
     let outputTitle = outputTitleFail;
