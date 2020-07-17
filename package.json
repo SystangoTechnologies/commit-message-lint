@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "handlebars": "^4.7.2",
-    "lodash": "^4.17.14",
+    "lodash": "^4.17.19",
     "moment": "^2.24.0",
     "pg": "^7.12.1",
     "probot": "^9.5.0",
