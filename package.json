@@ -19,7 +19,7 @@
     "lint": "standard --fix"
   },
   "dependencies": {
-    "handlebars": "^4.7.2",
+    "handlebars": "^4.7.7",
     "lodash": "^4.17.14",
     "moment": "^2.24.0",
     "pg": "^7.12.1",
